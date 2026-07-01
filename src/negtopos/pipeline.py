@@ -12,6 +12,7 @@ import httpx
 from .capabilities import (
     CAPS_PATH,
     append_capability,
+    load_categories,
     preset_set,
     read_caps_text,
 )
@@ -75,9 +76,9 @@ def _build_retry_hint(error: str) -> str:
         "包含 negative_chunks、positive_conditions、has_valid_condition 三个字段，"
         "且 positive_conditions 长度必须等于 negative_chunks 长度，"
         "每个 source_chunk_id 必须对应一个 chunk_id，"
-        "每项必须含 target_capability(英文 snake_case) / table_cap(布尔) / "
-        "capability_category(代码与实现类/任务执行流程类/指令与偏好遵循类/安全与合规类/other 之一)，"
-        "且 table_cap 必须与 target_capability 是否在预设表内一致。不要输出任何其它内容。"
+        "每项必须含 target_capability(预设表中的叶子标签，英文 snake_case，"
+        "不能填大类名) / table_cap(布尔) / capability_category(预设表中的大类段名之一)，"
+        "且 table_cap 必须与 target_capability 是否为预设叶子一致。不要输出任何其它内容。"
     )
 
 
@@ -92,6 +93,7 @@ def step_c(
     # issues in the same run are visible.
     caps_text = read_caps_text(CAPS_PATH)
     caps_set = preset_set(CAPS_PATH)
+    cats = load_categories(CAPS_PATH)
     prompt = build_prompt(issue_json, caps_text)
 
     max_retries = config.processing.max_retries
@@ -132,7 +134,7 @@ def step_c(
             _sleep_backoff(backoff_base, attempt)
             continue
 
-        vr: ValidationResult = validate(parsed, caps_set)
+        vr: ValidationResult = validate(parsed, caps_set, cats)
         if not vr.ok:
             last_error = f"[attempt {attempt}] {vr.error}"
             _sleep_backoff(backoff_base, attempt)

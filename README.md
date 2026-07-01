@@ -75,7 +75,7 @@ uv run python -m negtopos --config config.toml
     {"chunk_id": 1, "text": "解题过程中途停止"}
   ],
   "positive_conditions": [
-    {"source_chunk_id": 1, "target_capability": "multi_step_task_completion", "table_cap": true, "capability_category": "任务执行流程类"}
+    {"source_chunk_id": 1, "target_capability": "multi_step_completion", "table_cap": false, "capability_category": "execution_control"}
   ],
   "has_valid_condition": true
 }
@@ -93,24 +93,23 @@ uv run python -m negtopos --config config.toml
 | `llm_prompt` | 实际下发的完整 prompt（含拼接的预设标签表） |
 | `llm_response` | LLM 原始输出文本（最后一次尝试） |
 | `negative_chunks` | 校验后的 Step c 切分结果（`chunk_id` + `text`） |
-| `positive_conditions` | 每项含 `source_chunk_id` / `target_capability`（英文 snake_case 能力标签）/ `table_cap`（是否命中预设表）/ `capability_category`（5 大类之一） |
+| `positive_conditions` | 每项含 `source_chunk_id` / `target_capability`（英文 snake_case **叶子**能力标签）/ `table_cap`（是否命中预设表叶子）/ `capability_category`（预设表中的大类段名之一） |
 | `has_valid_condition` | 校验后的 Step c 结果 |
 
 ### target_capability 与预设标签表
 
-`target_capability` 是从负面"没实现对的能力"映射出的"应该具备的正面能力"标签。预设标签表存放在 `src/negtopos/capabilities.txt`（单一事实来源），按大类分段：
+`target_capability` 是从负面"没实现对的能力"映射出的"应该具备的正面能力"标签。预设标签表存放在 `src/negtopos/capabilities.txt`（单一事实来源），为**树形**格式：
 
-- `代码与实现类`
-- `任务执行流程类`
-- `指令与偏好遵循类`
-- `安全与合规类`
-- `other`
+- 顶格 snake_case 行 = **大类**（如 `code_generation` / `tool_use` / `planning` / `execution_control` / `error_recovery` / `other`）。
+- 缩进带 `├──`/`└──` 的行 = **叶子标签**。
 
 规则：
 
-- 标签命中预设表 → `table_cap=true`；模型自创新标签 → `table_cap=false`。
-- validator 严格校验 `table_cap` 与标签是否在表内一致，不一致会触发重试。
-- 每条 issue 成功后，自创新标签（`table_cap=false`）会按其 `capability_category` 自动追加到 `capabilities.txt` 对应大类段末尾，供后续 issue 复用——表随运行自增长。
+- `target_capability` 只能填叶子标签（或自创新叶子）；大类名只能作 `capability_category`，不能作 `target_capability`。
+- 标签是预设叶子 → `table_cap=true`；自创新叶子 → `table_cap=false`。
+- 大类集合从 txt **动态读取**（手改大类无需改代码）；`capability_category` 必须是其中之一。
+- validator 严格校验 `table_cap` 与标签是否为预设叶子一致、`capability_category` 是否为合法大类，不一致会触发重试。
+- 每条 issue 成功后，自创新叶子会按其 `capability_category` 自动追加到 `capabilities.txt` 对应大类段末尾（树形 `└──`），供后续 issue 复用——表随运行自增长。
 
 ## 流程
 

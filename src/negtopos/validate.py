@@ -6,8 +6,6 @@ import json
 import re
 from dataclasses import dataclass
 
-from .capabilities import VALID_CATEGORIES
-
 _TAG_RE = re.compile(r"^[a-z][a-z0-9_]*$")
 
 
@@ -73,15 +71,24 @@ def parse_llm_json(text: str) -> tuple[dict | None, str]:
     return obj, ""
 
 
-def validate(obj: dict, preset_set: frozenset[str] | None = None) -> ValidationResult:
+def validate(
+    obj: dict,
+    preset_set: frozenset[str] | None = None,
+    categories: tuple[str, ...] | frozenset[str] | None = None,
+) -> ValidationResult:
     """Schema-validate the parsed object.
 
-    ``preset_set`` is the set of preset capability tags (from
-    capabilities.txt). It is used to cross-check each positive_condition's
-    ``table_cap`` against its ``target_capability`` membership.
+    ``preset_set`` is the set of preset leaf tags (from capabilities.txt),
+    used to cross-check each positive_condition's ``table_cap`` against its
+    ``target_capability`` membership. ``categories`` is the tuple of valid
+    大类 names (also from capabilities.txt), used to check
+    ``capability_category``. Both default to empty (everything fails the
+    membership checks) so callers should always pass them.
     """
     if preset_set is None:
         preset_set = frozenset()
+    if categories is None:
+        categories = ()
     # Required top-level keys
     for key in ("negative_chunks", "positive_conditions", "has_valid_condition"):
         if key not in obj:
@@ -148,10 +155,10 @@ def validate(obj: dict, preset_set: frozenset[str] | None = None) -> ValidationR
             return ValidationResult.failure(
                 f"positive_conditions[{j}].capability_category 必须是非空字符串"
             )
-        if cat not in VALID_CATEGORIES:
+        if cat not in categories:
             return ValidationResult.failure(
-                f"positive_conditions[{j}].capability_category 必须是 "
-                f"{list(VALID_CATEGORIES)} 之一：{cat!r}"
+                f"positive_conditions[{j}].capability_category 必须是预设表中的大类段名"
+                f"（{list(categories)}）之一：{cat!r}"
             )
         # Strict table_cap consistency: membership must match the flag.
         in_preset = tc in preset_set
