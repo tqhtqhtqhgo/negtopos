@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+
+# Virtualenv
+.venv/
+
+# Editor
+*.swp
+*.swo
+*~
+
+# Secrets / local config
+config.toml
+
+# Data
+input/*.jsonl
+
+# Output
+output/*.jsonl

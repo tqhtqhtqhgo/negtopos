@@ -1,0 +1,33 @@
+# target_capability 预设标签表（单一事实来源）
+# 命中此表 → table_cap=true；未命中的自创新标签 → table_cap=false，
+# 并在本条 issue 成功后自动追加到对应大类段末尾。
+# 大类：代码与实现类 / 任务执行流程类 / 指令与偏好遵循类 / 安全与合规类 / other
+
+# 代码与实现类
+frontend_ui_implementation
+algorithm_logic_implementation
+code_syntax_correctness
+structured_data_mapping
+numeric_precision_handling
+validation_and_testing
+
+scientific_function_implementation
+# 任务执行流程类
+multi_step_task_completion
+tool_call_continuity
+error_recovery
+planning_and_decomposition
+
+# 指令与偏好遵循类
+explicit_constraint_compliance
+output_scope_control
+preference_inheritance
+reasoning_answer_consistency
+
+# 安全与合规类
+unsafe_request_refusal
+intermediate_process_safety
+safe_alternative_provision
+
+# other
+multi_turn_context_retention

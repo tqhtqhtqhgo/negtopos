@@ -1,0 +1,15 @@
+[api]
+url = "http://your-api-host:port"
+key = "sk-YOUR_API_KEY_HERE"
+model = "glm-5.2"
+json_mode = true          # 是否请求 response_format=json_object；若模型不支持可关闭
+temperature = 0.2
+timeout = 3600             # 单次请求超时（秒）
+
+[processing]
+max_retries = 5           # 首次失败后的重试次数（最多 max_retries+1 次调用）
+backoff_base = 2.0        # 指数退避基数（秒），设为 0 则不退避
+
+[io]
+input_path = "input/issues.jsonl"
+output_path = "output/results.jsonl"
